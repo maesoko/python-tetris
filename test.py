@@ -42,6 +42,7 @@ BLOCKS = [
     ]
 ]
 
+
 @game_window.event
 def on_draw():
     game_window.clear()
