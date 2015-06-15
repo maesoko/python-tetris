@@ -51,4 +51,5 @@ def on_draw():
             if tmp[y][x] == 1:
                 block.blit(x * 16, y * 16, 0, width=16, height=16)
 
+
 pyglet.app.run()
