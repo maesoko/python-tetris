@@ -1,7 +1,7 @@
 import pyglet
 import random
 
-game_window = pyglet.window.Window(width=640, height=480)
+game_window = pyglet.window.Window(width=320, height=320)
 
 block = pyglet.resource.image("block.png")
 BLOCKS = [
