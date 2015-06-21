@@ -2,9 +2,11 @@ import pyglet
 import random
 from pyglet.gl import *
 
+# VARIABLES
 game_settings = {"width": 320, "height": 320}
-game_window = pyglet.window.Window(width=game_settings["width"]
-                                   , height=game_settings["height"])
+game_window = pyglet.window.Window(width=game_settings["width"],
+                                   height=game_settings["height"],
+                                   caption="TETRIS")
 
 block_settings = {"block_size": 16,
                   "image": pyglet.resource.image("block.png")}
@@ -53,11 +55,8 @@ class AbstractPaint:
         self.block_size = block_size
         self.image = image
 
-
     def paint_matrix(self, matrix, pos_x, pos_y):
         game_window.clear()
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         for y in range(len(matrix)):
             for x in range(len(matrix[y])):
                 if matrix[y][x] == 1:
@@ -69,12 +68,51 @@ class AbstractPaint:
 
 class Block(AbstractPaint):
     def __init__(self):
-        AbstractPaint.__init__(self, block_size=block_settings["block_size"]
-                               , image=block_settings["image"])
+        AbstractPaint.__init__(self, block_size=block_settings["block_size"],
+                               image=block_settings["image"])
         self.matrix = random.choice(BLOCKS)
-        # self.paint_matrix(matrix=self.matrix, pos_x=0, pos_y=0)
+        self.x = 0
+        self.y = 0
+        self.speed = self.block_size
+
+    def draw(self):
+        self.paint_matrix(matrix=self.matrix, pos_x=self.x, pos_y=self.y)
+
+    def move_left(self):
+        self.x -= self.speed
+
+    def move_right(self):
+        self.x += self.speed
+
+    def rotate(self):
+        rotated = []
+        for x in range(len(self.matrix[0])):
+            rotated.append([0] * len(self.matrix[0]))
+            for y in range(len(self.matrix)):
+                pass
+                # rotated[x][len(self.matrix) - y - 1] = self.matrix[y][x]
+
+        # self.matrix = rotated
+
+
+@game_window.event
+def on_draw():
+    game_window.clear()
+    block.draw()
+
+
+@game_window.event
+def on_key_press(symbol, modifiers):
+    from pyglet.window import key
+
+    if symbol == key.LEFT:
+        block.move_left()
+    elif symbol == key.RIGHT:
+        block.move_right()
+    elif symbol == key.UP:
+        block.rotate()
 
 
 if __name__ == '__main__':
-    Block()
+    block = Block()
     pyglet.app.run()
