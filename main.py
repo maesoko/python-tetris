@@ -129,8 +129,8 @@ class Block(AbstractPaint):
         for y in range(self.board_height):
             for x in range(self.board_width):
                 try:
-                    if matrix[y - offset_y] and matrix[y - offset_y][x - offset_x]:
-                        print(y - offset_y, x - offset_x)
+                    if matrix[y - offset_y] and matrix[y - offset_y][x - offset_x] and \
+                            x - offset_x >= 0 and y - offset_y >= 0:
                         board_matrix[y][x] += 1
                 except IndexError:
                     pass
