@@ -12,6 +12,11 @@ block_settings = {"block_size": 16,
                   "image": pyglet.resource.image("block.png")}
 board_settings = {"board_width": 10, "board_height": 20}
 block_map = [[0 for x in range(board_settings["board_width"])] for y in range(board_settings["board_height"])]
+lbl_game_over = pyglet.text.Label('Game Over',
+                                  font_name='Times New Roman',
+                                  font_size=24,
+                                  x=game_window.width // 2, y=game_window.height // 2,
+                                  anchor_x='center', anchor_y='center')
 
 BLOCKS = [
     [
@@ -76,6 +81,7 @@ class Block(AbstractPaint):
         self.speed = self.block_size
         self.board_width = board_settings["board_width"]
         self.board_height = board_settings["board_height"]
+        self.game_over_flg = False
 
     def draw(self):
         self.paint_matrix(matrix=self.matrix, pos_x=self.x, pos_y=self.y)
@@ -117,6 +123,9 @@ class Block(AbstractPaint):
         if self.check(block_map, self.matrix, self.pos_x, self.pos_y - 1):
             self.y -= self.speed
         else:
+            if not self.check(block_map, self.matrix, self.pos_x, self.pos_y):
+                self.game_over()
+
             self.merge_matrix(block_map, self.matrix, self.pos_x, self.pos_y)
             self.clear_rows(block_map)
             self.reset()
@@ -131,7 +140,7 @@ class Block(AbstractPaint):
             for x in range(self.board_width):
                 try:
                     if matrix[y - offset_y] and matrix[y - offset_y][x - offset_x] and \
-                            x - offset_x >= 0 and y - offset_y >= 0:
+                                            x - offset_x >= 0 and y - offset_y >= 0:
                         board_matrix[y][x] += 1
                 except IndexError:
                     pass
@@ -162,6 +171,10 @@ class Block(AbstractPaint):
                 board_matrix.insert(self.board_height - 1, new_row)
                 self.clear_rows(board_matrix)
 
+    def game_over(self):
+        self.game_over_flg = True
+        pyglet.clock.unschedule(update)
+
 
 class Board(AbstractPaint):
     def __init__(self):
@@ -170,11 +183,15 @@ class Board(AbstractPaint):
     def draw(self):
         self.paint_matrix(block_map, 0, 0)
 
+
 @game_window.event
 def on_draw():
     game_window.clear()
     block.draw()
     board.draw()
+
+    if block.game_over_flg:
+        lbl_game_over.draw()
 
 
 @game_window.event
