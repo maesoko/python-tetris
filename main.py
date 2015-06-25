@@ -58,14 +58,16 @@ BLOCKS = [
 
 
 class AbstractPaint:
-    def __init__(self):
+    def __init__(self, color):
         self.block_size = block_settings["block_size"]
         self.image = block_settings["image"]
+        self.color = color
 
     def paint_matrix(self, matrix, pos_x, pos_y):
         for y in range(len(matrix)):
             for x in range(len(matrix[y])):
                 if matrix[y][x]:
+                    gl.glColor3f(self.color[0], self.color[1], self.color[2])
                     self.image.blit(x=x * self.block_size + pos_x,
                                     y=y * self.block_size + pos_y,
                                     z=0,
@@ -73,8 +75,12 @@ class AbstractPaint:
 
 
 class Block(AbstractPaint):
+    colors = [[1.0, 0.0, 1.0], [0.4, 0.5, 1.0], [1.0, 0.0, 0.0],
+              [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [1.0, 0.5, 0.0],
+              [0.5, 1.0, 1.0]]
+
     def __init__(self):
-        AbstractPaint.__init__(self)
+        AbstractPaint.__init__(self, random.choice(self.colors))
         self.matrix = random.choice(BLOCKS)
         self.x = game_settings["width"] // 4 - self.block_size
         self.y = game_settings["height"] - self.block_size * len(self.matrix)
@@ -118,6 +124,7 @@ class Block(AbstractPaint):
 
     def change_matrix(self):
         self.matrix = random.choice(BLOCKS)
+        self.color = random.choice(self.colors)
 
     def auto_drop(self):
         if self.check(block_map, self.matrix, self.pos_x, self.pos_y - 1):
@@ -177,8 +184,10 @@ class Block(AbstractPaint):
 
 
 class Board(AbstractPaint):
+    color = [0.5, 0.5, 0.5]
+
     def __init__(self):
-        AbstractPaint.__init__(self)
+        AbstractPaint.__init__(self, self.color)
 
     def draw(self):
         self.paint_matrix(block_map, 0, 0)
