@@ -14,35 +14,35 @@ board_settings = {"board_width": 10, "board_height": 20}
 block_map = [[0 for x in range(board_settings["board_width"])] for y in range(board_settings["board_height"])]
 
 BLOCKS = [
-    # [
-    #     [1, 1],
-    #     [1, 1]
-    # ],
-    # [
-    #     [1, 1],
-    #     [0, 1],
-    #     [0, 1]
-    # ],
-    # [
-    #     [1, 1],
-    #     [1, 0],
-    #     [1, 0]
-    # ],
-    # [
-    #     [1, 0],
-    #     [1, 1],
-    #     [1, 0]
-    # ],
-    # [
-    #     [1, 0],
-    #     [1, 1],
-    #     [0, 1]
-    # ],
-    # [
-    #     [0, 1],
-    #     [1, 1],
-    #     [1, 0]
-    # ],
+    [
+        [1, 1],
+        [1, 1]
+    ],
+    [
+        [1, 1],
+        [0, 1],
+        [0, 1]
+    ],
+    [
+        [1, 1],
+        [1, 0],
+        [1, 0]
+    ],
+    [
+        [1, 0],
+        [1, 1],
+        [1, 0]
+    ],
+    [
+        [1, 0],
+        [1, 1],
+        [0, 1]
+    ],
+    [
+        [0, 1],
+        [1, 1],
+        [1, 0]
+    ],
     [
         [1],
         [1],
@@ -118,7 +118,7 @@ class Block(AbstractPaint):
             self.y -= self.speed
         else:
             self.merge_matrix(block_map, self.matrix, self.pos_x, self.pos_y)
-            # self.clear_rows(block_map)
+            self.clear_rows(block_map)
             self.reset()
 
     def reset(self):
@@ -153,11 +153,14 @@ class Block(AbstractPaint):
         for y in range(self.board_height):
             full = True
             for x in range(self.board_width):
-                if board_matrix[y][x]:
+                if not board_matrix[y][x]:
                     full = False
 
             if full:
-                pass
+                del board_matrix[y]
+                new_row = [0 for i in range(self.board_width)]
+                board_matrix.insert(self.board_height - 1, new_row)
+                self.clear_rows(board_matrix)
 
 
 class Board(AbstractPaint):
