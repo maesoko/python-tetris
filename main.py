@@ -9,14 +9,44 @@ game_window = pyglet.window.Window(width=game_settings["width"],
                                    caption="TETRIS")
 
 block_settings = {"block_size": 16,
-                  "image": pyglet.resource.image("block.png")}
+                  "image": pyglet.image.load("block.png")}
 board_settings = {"board_width": 10, "board_height": 20}
 block_map = [[0 for x in range(board_settings["board_width"])] for y in range(board_settings["board_height"])]
-lbl_game_over = pyglet.text.Label('Game Over',
+background_image = pyglet.image.load("background.png")
+batch = pyglet.graphics.Batch()
+bg_sprite = pyglet.sprite.Sprite(background_image, game_window.width // 2, 0, batch=batch)
+
+# LABELS
+lbl_game_over = pyglet.text.Label('Game over',
+                                  color=(200, 200, 200, 200),
                                   font_name='Times New Roman',
                                   font_size=24,
                                   x=game_window.width // 2, y=game_window.height // 2,
                                   anchor_x='center', anchor_y='center')
+
+lbl_next = pyglet.text.Label('NEXT:',
+                             color=(0, 0, 0, 255),
+                             font_name='Times New Roman',
+                             font_size=14,
+                             x=game_window.width // 2, y=game_window.height - 30,
+                             anchor_x='left', anchor_y='center',
+                             batch=batch)
+
+lbl_line = pyglet.text.Label('LINE: ',
+                             color=(0, 0, 0, 255),
+                             font_name='Times New Roman',
+                             font_size=14,
+                             x=game_window.width // 2, y=game_window.height - 10,
+                             anchor_x='left', anchor_y='center',
+                             batch=batch)
+
+lbl_point = pyglet.text.Label('0',
+                              color=(0, 0, 0, 255),
+                              font_name='Times New Roman',
+                              font_size=14,
+                              x=lbl_line.x + 50, y=game_window.height - 10,
+                              anchor_x='left', anchor_y='center',
+                              batch=batch)
 
 BLOCKS = [
     [
@@ -64,14 +94,15 @@ class AbstractPaint:
         self.color = color
 
     def paint_matrix(self, matrix, pos_x, pos_y):
+        gl.glColor3f(self.color[0], self.color[1], self.color[2])
         for y in range(len(matrix)):
             for x in range(len(matrix[y])):
                 if matrix[y][x]:
-                    gl.glColor3f(self.color[0], self.color[1], self.color[2])
                     self.image.blit(x=x * self.block_size + pos_x,
                                     y=y * self.block_size + pos_y,
                                     z=0,
-                                    width=self.block_size, height=self.block_size)
+                                    width=self.block_size,
+                                    height=self.block_size)
 
 
 class Block(AbstractPaint):
@@ -123,8 +154,8 @@ class Block(AbstractPaint):
             self.matrix = rotated
 
     def change_matrix(self):
-        self.matrix = random.choice(BLOCKS)
-        self.color = random.choice(self.colors)
+        self.matrix = next_block.matrix
+        self.color = next_block.color
 
     def auto_drop(self):
         if self.check(block_map, self.matrix, self.pos_x, self.pos_y - 1):
@@ -135,10 +166,11 @@ class Block(AbstractPaint):
 
             self.merge_matrix(block_map, self.matrix, self.pos_x, self.pos_y)
             self.clear_rows(block_map)
-            self.reset()
+            self.change_matrix()
+            self.pos_reset()
+            next_block.change_matrix()
 
-    def reset(self):
-        self.change_matrix()
+    def pos_reset(self):
         self.x = game_settings["width"] // 4 - self.block_size
         self.y = game_settings["height"] - self.block_size * len(self.matrix)
 
@@ -176,11 +208,13 @@ class Block(AbstractPaint):
                 del board_matrix[y]
                 new_row = [0 for i in range(self.board_width)]
                 board_matrix.insert(self.board_height - 1, new_row)
+                lbl_point.text = str(int(lbl_point.text) + 1)
                 self.clear_rows(board_matrix)
 
     def game_over(self):
-        self.game_over_flg = True
         pyglet.clock.unschedule(update)
+        self.game_over_flg = True
+        self.color = Board.color
 
 
 class Board(AbstractPaint):
@@ -193,10 +227,24 @@ class Board(AbstractPaint):
         self.paint_matrix(block_map, 0, 0)
 
 
+class NextBlock(Block):
+    def __init__(self):
+        Block.__init__(self)
+        self.x = lbl_next.x
+        self.y = lbl_next.y - 10 - self.block_size * len(self.matrix)
+
+    def change_matrix(self):
+        self.matrix = random.choice(BLOCKS)
+        self.color = random.choice(self.colors)
+        self.y = lbl_next.y - 10 - self.block_size * len(self.matrix)
+
+
 @game_window.event
 def on_draw():
     game_window.clear()
+    batch.draw()
     block.draw()
+    next_block.draw()
     board.draw()
 
     if block.game_over_flg:
@@ -207,16 +255,15 @@ def on_draw():
 def on_key_press(symbol, modifiers):
     from pyglet.window import key
 
-    if symbol == key.LEFT:
-        block.move_left()
-    elif symbol == key.RIGHT:
-        block.move_right()
-    elif symbol == key.UP:
-        block.rotate()
-    elif symbol == key.DOWN:
-        block.move_down()
-    elif symbol == key.SPACE:
-        block.reset()
+    if not block.game_over_flg:
+        if symbol == key.LEFT:
+            block.move_left()
+        elif symbol == key.RIGHT:
+            block.move_right()
+        elif symbol == key.UP:
+            block.rotate()
+        elif symbol == key.DOWN:
+            block.move_down()
 
 
 def update(dt):
@@ -226,6 +273,7 @@ def update(dt):
 if __name__ == '__main__':
     block = Block()
     board = Board()
+    next_block = NextBlock()
     pyglet.clock.schedule_interval(update, 0.5)
     pyglet.app.run()
 
